@@ -150,23 +150,25 @@ def main():
     print("Starting API Tests...")
     print("=" * 50)
     
-    # Test registration
+    # Test registration (no tokens returned)
     registration_result = test_user_registration()
-    if not registration_result:
-        # If registration fails (user might already exist), try login
-        print("\nRegistration failed, trying login with existing user...")
-        login_result = test_user_login()
+    
+    # Always test login to get tokens (registration no longer provides tokens)
+    if registration_result:
+        print("\nRegistration successful! Now testing login to get tokens...")
+        login_result = test_user_login("testuser123", "testpassword123")
     else:
-        # Use tokens from registration
-        login_result = registration_result
+        # If registration fails (user might already exist), try login
+        print("\nRegistration failed (user might already exist), trying login...")
+        login_result = test_user_login()
     
     if not login_result:
         print("Could not get authentication tokens. Stopping tests.")
         return
     
-    # Extract tokens
-    access_token = login_result.get('tokens', {}).get('access') or login_result.get('access')
-    refresh_token = login_result.get('tokens', {}).get('refresh') or login_result.get('refresh')
+    # Extract tokens (only from login now)
+    access_token = login_result.get('access')
+    refresh_token = login_result.get('refresh')
     
     if not access_token:
         print("No access token received. Stopping tests.")

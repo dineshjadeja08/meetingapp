@@ -45,18 +45,16 @@ Content-Type: application/json
 **Response (201 Created):**
 ```json
 {
-    "message": "User registered successfully!",
+    "message": "User registered successfully! Please login to get your access tokens.",
     "user": {
         "id": 1,
         "username": "john_doe",
         "email": "john@example.com"
-    },
-    "tokens": {
-        "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
-        "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
     }
 }
 ```
+
+**Note:** Registration no longer provides JWT tokens. Users must login separately to receive tokens.
 
 #### 2. User Login (Sign In)
 ```
@@ -89,7 +87,7 @@ Content-Type: application/json
 POST /api/accounts/auth/token/refresh/
 Content-Type: application/json
 
-{
+{    
     "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
 }
 ```

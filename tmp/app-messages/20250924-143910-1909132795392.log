@@ -1,0 +1,109 @@
+Content-Type: multipart/alternative;
+ boundary="===============4446920880367949192=="
+MIME-Version: 1.0
+Subject: Password Reset Request - Meeting App
+From: Meeting App <noreply@meetingapp.com>
+To: dineshbtech26@gmail.com
+Date: Wed, 24 Sep 2025 09:09:10 -0000
+Message-ID: <175870495034.9528.1281679699348081943@RDJ>
+
+--===============4446920880367949192==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+Hello dinesh,
+
+You requested a password reset for your Meeting App account.
+
+Reset your password by clicking this link: http://localhost:3000/password-reset-confirm?uid=NQ&token=cwn21a-b9aeb2a81cbadfc864e264512136c57b
+
+This link will expire in 24 hours for security reasons.
+
+If you didn't request this password reset, please ignore this email.
+
+Best regards,
+The Meeting App Team
+--===============4446920880367949192==
+Content-Type: text/html; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Password Reset - Meeting App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f8f9fa;
+            padding: 30px;
+            border-radius: 0 0 5px 5px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Password Reset Request</h2>
+    </div>
+    
+    <div class="content">
+        <p>Hello dinesh,</p>
+        
+        <p>You requested a password reset for your Meeting App account. Click the button below to reset your password:</p>
+        
+        <p style="text-align: center;">
+            <a href="http://localhost:3000/password-reset-confirm?uid=NQ&amp;token=cwn21a-b9aeb2a81cbadfc864e264512136c57b" class="button">Reset Password</a>
+        </p>
+        
+        <p>Or copy and paste this link into your browser:</p>
+        <p style="word-break: break-all; color: #007bff;">http://localhost:3000/password-reset-confirm?uid=NQ&amp;token=cwn21a-b9aeb2a81cbadfc864e264512136c57b</p>
+        
+        <p><strong>This link will expire in 24 hours for security reasons.</strong></p>
+        
+        <p>If you didn't request this password reset, please ignore this email. Your password will remain unchanged.</p>
+        
+        <div class="footer">
+            <p>Best regards,<br>The Meeting App Team</p>
+            <p><small>This is an automated message, please do not reply to this email.</small></p>
+        </div>
+    </div>
+</body>
+</html>
+--===============4446920880367949192==--
+
+-------------------------------------------------------------------------------

@@ -84,7 +84,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'core.wsgi.application'
+WSGI_APPLICATION = 'core.wsgi.application'   
 
 
 # Database
@@ -195,14 +195,23 @@ SIMPLE_JWT = {
 }
 
 # Email Configuration (for password reset)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # For production
+
+# QUICK FIX: File-based email backend (saves emails as files)
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+EMAIL_FILE_PATH = 'tmp/app-messages'  # Creates email files you can read
+
+# Alternative: Console backend (prints to Django server terminal)
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# For production - sends actual emails via SMTP
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # EMAIL_HOST = 'smtp.gmail.com'
 # EMAIL_PORT = 587
 # EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'your-email@gmail.com'
-# EMAIL_HOST_PASSWORD = 'your-app-password'
-DEFAULT_FROM_EMAIL = 'noreply@meetingapp.com'
+# EMAIL_HOST_USER = 'your-email@gmail.com'  # Replace with your Gmail address
+# EMAIL_HOST_PASSWORD = 'your-app-password'  # Replace with your Gmail app password
+
+DEFAULT_FROM_EMAIL = 'Meeting App <noreply@meetingapp.com>'
 
 # Swagger Configuration
 SWAGGER_SETTINGS = {
@@ -214,3 +223,5 @@ SWAGGER_SETTINGS = {
         }
     }
 }
+
+

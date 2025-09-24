@@ -91,7 +91,7 @@ class UserRegistrationView(APIView):
     @swagger_auto_schema(
         tags=['Authentication'],
         operation_summary="User Sign Up",
-        operation_description="Register a new user account",
+        operation_description="Register a new user account. After registration, use the login endpoint to get JWT tokens.",
         request_body=UserRegistrationSerializer,
         responses={
             201: openapi.Response(
@@ -99,20 +99,16 @@ class UserRegistrationView(APIView):
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        'message': openapi.Schema(type=openapi.TYPE_STRING),
+                        'message': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description="Success message"
+                        ),
                         'user': openapi.Schema(
                             type=openapi.TYPE_OBJECT,
                             properties={
                                 'id': openapi.Schema(type=openapi.TYPE_INTEGER),
                                 'username': openapi.Schema(type=openapi.TYPE_STRING),
                                 'email': openapi.Schema(type=openapi.TYPE_STRING),
-                            }
-                        ),
-                        'tokens': openapi.Schema(
-                            type=openapi.TYPE_OBJECT,
-                            properties={
-                                'refresh': openapi.Schema(type=openapi.TYPE_STRING),
-                                'access': openapi.Schema(type=openapi.TYPE_STRING),
                             }
                         )
                     }
@@ -126,20 +122,15 @@ class UserRegistrationView(APIView):
             serializer = UserRegistrationSerializer(data=request.data)
             if serializer.is_valid():
                 user = serializer.save()
-                refresh = RefreshToken.for_user(user)
                 
                 logger.info(f"New user registered: {user.username}")
                 
                 return Response({
-                    'message': 'User registered successfully!',
+                    'message': 'User registered successfully! Please login to get your access tokens.',
                     'user': {
                         'id': user.id,
                         'username': user.username,
                         'email': user.email,
-                    },
-                    'tokens': {
-                        'refresh': str(refresh),
-                        'access': str(refresh.access_token),
                     }
                 }, status=status.HTTP_201_CREATED)
             
