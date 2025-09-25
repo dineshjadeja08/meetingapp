@@ -1,0 +1,480 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Video Meetings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border: none;
+    }
+    
+    .stats-icon {
+        font-size: 2.5rem;
+        opacity: 0.8;
+    }
+    
+    .recent-room-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        margin-bottom: 1rem;
+    }
+    
+    .recent-room-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .room-status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+    }
+    
+    .status-live {
+        background-color: #dc3545;
+        color: white;
+        animation: pulse 2s infinite;
+    }
+    
+    .status-ended {
+        background-color: #6c757d;
+        color: white;
+    }
+    
+    .status-waiting {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.7; }
+        100% { opacity: 1; }
+    }
+    
+    .quick-action-btn {
+        border-radius: 12px;
+        padding: 1rem;
+        border: 2px dashed #dee2e6;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: #6c757d;
+        display: block;
+        text-align: center;
+    }
+    
+    .quick-action-btn:hover {
+        border-color: #667eea;
+        background-color: #f8f9fa;
+        color: #667eea;
+        text-decoration: none;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #6c757d;
+    }
+    
+    .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">Welcome back, {{ user.get_full_name|default:user.username }}!</h1>
+                    <p class="text-muted">Manage your video meetings and rooms</p>
+                </div>
+                <div>
+                    <a href="{% url 'videoroom:create_room' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus-circle me-2"></i>New Meeting
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="h4 mb-1">{{ user_rooms.count }}</h3>
+                        <p class="mb-0 opacity-75">Total Rooms</p>
+                    </div>
+                    <div class="stats-icon">
+                        <i class="fas fa-video"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="h4 mb-1">
+                            {% for room in user_rooms %}
+                                {% if room.is_live %}1{% endif %}
+                            {% empty %}0{% endfor %}
+                        </h3>
+                        <p class="mb-0 opacity-75">Live Now</p>
+                    </div>
+                    <div class="stats-icon">
+                        <i class="fas fa-broadcast-tower"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="h4 mb-1">{{ recent_participations.count }}</h3>
+                        <p class="mb-0 opacity-75">Participated</p>
+                    </div>
+                    <div class="stats-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #e83e8c 0%, #6f42c1 100%);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="h4 mb-1">
+                            {% for room in user_rooms %}
+                                {{ room.duration_minutes|add:0 }}
+                            {% empty %}0{% endfor %}
+                        </h3>
+                        <p class="mb-0 opacity-75">Total Minutes</p>
+                    </div>
+                    <div class="stats-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Your Meeting Rooms -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pt-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-video me-2 text-primary"></i>Your Meeting Rooms
+                        </h5>
+                        <a href="{% url 'videoroom:create_room' %}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-plus me-1"></i>Create New
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    {% if user_rooms %}
+                        {% for room in user_rooms %}
+                        <div class="recent-room-card">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <h6 class="mb-0 me-3">{{ room.title }}</h6>
+                                            {% if room.is_live %}
+                                                <span class="room-status-badge status-live">
+                                                    <i class="fas fa-circle me-1"></i>LIVE
+                                                </span>
+                                            {% elif room.ended_at %}
+                                                <span class="room-status-badge status-ended">
+                                                    <i class="fas fa-stop-circle me-1"></i>ENDED
+                                                </span>
+                                            {% else %}
+                                                <span class="room-status-badge status-waiting">
+                                                    <i class="fas fa-clock me-1"></i>WAITING
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="text-muted small mb-2">
+                                            <i class="fas fa-key me-1"></i>
+                                            <span class="font-monospace">{{ room.room_code }}</span>
+                                            
+                                            <span class="ms-3">
+                                                <i class="fas fa-users me-1"></i>
+                                                {{ room.participant_count }}/{{ room.max_participants }}
+                                            </span>
+                                            
+                                            {% if room.duration_minutes > 0 %}
+                                            <span class="ms-3">
+                                                <i class="fas fa-clock me-1"></i>
+                                                {{ room.duration_minutes }} min
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="text-muted small">
+                                            Created {{ room.created_at|timesince }} ago
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-4 text-end">
+                                        <div class="btn-group">
+                                            <a href="{% url 'videoroom:room_detail' room.room_code %}" 
+                                               class="btn btn-sm btn-primary">
+                                                {% if room.is_live %}
+                                                    <i class="fas fa-sign-in-alt me-1"></i>Join
+                                                {% else %}
+                                                    <i class="fas fa-eye me-1"></i>View
+                                                {% endif %}
+                                            </a>
+                                            
+                                            <button class="btn btn-sm btn-outline-secondary"
+                                                    onclick="copyRoomCode('{{ room.room_code }}')">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                            
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                                    data-bs-toggle="dropdown">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="{% url 'videoroom:room_detail' room.room_code %}">
+                                                    <i class="fas fa-eye me-2"></i>View Details
+                                                </a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="shareRoom('{{ room.room_code }}', '{{ room.title }}')">
+                                                    <i class="fas fa-share me-2"></i>Share
+                                                </a></li>
+                                                {% if room.host == user %}
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item text-danger" href="#" onclick="deleteRoom('{{ room.room_code }}')">
+                                                    <i class="fas fa-trash me-2"></i>Delete
+                                                </a></li>
+                                                {% endif %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <i class="fas fa-video-slash"></i>
+                            </div>
+                            <h6>No meeting rooms yet</h6>
+                            <p class="mb-3">Create your first meeting room to get started with video conferencing.</p>
+                            <a href="{% url 'videoroom:create_room' %}" class="btn btn-primary">
+                                <i class="fas fa-plus-circle me-2"></i>Create Your First Room
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions & Recent Activity -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0 pt-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt me-2 text-warning"></i>Quick Actions
+                    </h5>
+                </div>
+                
+                <div class="card-body">
+                    <a href="{% url 'videoroom:create_room' %}" class="quick-action-btn mb-3">
+                        <i class="fas fa-plus-circle fa-2x mb-2 d-block"></i>
+                        <strong>Start New Meeting</strong>
+                        <div class="small text-muted">Create instant room</div>
+                    </a>
+                    
+                    <a href="{% url 'videoroom:join_room_page' %}" class="quick-action-btn">
+                        <i class="fas fa-door-open fa-2x mb-2 d-block"></i>
+                        <strong>Join Meeting</strong>
+                        <div class="small text-muted">Enter room code</div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recent Participations -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pt-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2 text-info"></i>Recent Activity
+                    </h5>
+                </div>
+                
+                <div class="card-body">
+                    {% if recent_participations %}
+                        {% for participation in recent_participations|slice:":5" %}
+                        <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                            <div class="me-3">
+                                <div class="bg-light rounded-circle p-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-video text-primary"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 small">{{ participation.room.title }}</h6>
+                                <div class="text-muted small">
+                                    <span class="font-monospace">{{ participation.room.room_code }}</span>
+                                </div>
+                                <div class="text-muted small">
+                                    {{ participation.joined_at|timesince }} ago
+                                </div>
+                            </div>
+                            <div>
+                                {% if participation.room.is_active %}
+                                    <a href="{% url 'videoroom:room_detail' participation.room.room_code %}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-sign-in-alt"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-history fa-2x mb-2 opacity-50"></i>
+                            <div>No recent activity</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyRoomCode(roomCode) {
+    navigator.clipboard.writeText(roomCode).then(() => {
+        // Show success toast
+        showToast('Room code copied to clipboard!', 'success');
+    }).catch(() => {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = roomCode;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showToast('Room code copied to clipboard!', 'success');
+    });
+}
+
+function shareRoom(roomCode, title) {
+    const url = window.location.origin + "{% url 'videoroom:room_detail' 'ROOM_CODE' %}".replace('ROOM_CODE', roomCode);
+    
+    if (navigator.share) {
+        navigator.share({
+            title: `Join "${title}" meeting`,
+            text: `You're invited to join a video meeting: ${title}`,
+            url: url
+        });
+    } else {
+        // Fallback - copy URL to clipboard
+        navigator.clipboard.writeText(url).then(() => {
+            showToast('Meeting link copied to clipboard!', 'success');
+        });
+    }
+}
+
+function deleteRoom(roomCode) {
+    if (confirm('Are you sure you want to delete this meeting room? This action cannot be undone.')) {
+        // Make API call to delete room
+        fetch(`/api/rooms/${roomCode}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                showToast('Meeting room deleted successfully', 'success');
+                location.reload();
+            } else {
+                showToast('Failed to delete meeting room', 'error');
+            }
+        })
+        .catch(() => {
+            showToast('An error occurred while deleting the room', 'error');
+        });
+    }
+}
+
+function showToast(message, type = 'info') {
+    // Create toast element
+    const toastContainer = document.getElementById('toast-container') || createToastContainer();
+    
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'primary'} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    // Initialize and show toast
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    // Remove element after hiding
+    toast.addEventListener('hidden.bs.toast', () => {
+        toast.remove();
+    });
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container position-fixed top-0 end-0 p-3';
+    container.style.zIndex = '1055';
+    document.body.appendChild(container);
+    return container;
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

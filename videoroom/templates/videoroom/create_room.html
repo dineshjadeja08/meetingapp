@@ -1,0 +1,369 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Meeting Room{% endblock %}
+
+{% block extra_css %}
+<style>
+    .create-room-container {
+        max-width: 600px;
+        margin: 50px auto;
+    }
+    
+    .feature-toggle {
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .feature-toggle:hover {
+        border-color: #667eea;
+        background-color: #f8f9fa;
+    }
+    
+    .feature-toggle.active {
+        border-color: #667eea;
+        background-color: rgba(102, 126, 234, 0.1);
+    }
+    
+    .feature-icon {
+        font-size: 2rem;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+    
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+    
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 24px;
+    }
+    
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+        background-color: #667eea;
+    }
+    
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+    
+    .create-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        padding: 15px 40px;
+        font-size: 1.1rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    
+    .create-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    .participants-slider {
+        background: linear-gradient(to right, #667eea, #764ba2);
+        height: 8px;
+        border-radius: 4px;
+        outline: none;
+    }
+    
+    .participants-value {
+        background: #667eea;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="create-room-container">
+        <div class="text-center mb-5">
+            <h1 class="display-6 fw-bold">
+                <i class="fas fa-video me-3 text-primary"></i>
+                Create Meeting Room
+            </h1>
+            <p class="lead text-muted">Set up your video meeting with custom settings</p>
+        </div>
+
+        <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+            
+            <!-- Basic Settings -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog me-2"></i>Basic Settings
+                    </h5>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Meeting Title -->
+                    <div class="mb-4">
+                        <label for="title" class="form-label fw-semibold">Meeting Title</label>
+                        <input type="text" 
+                               class="form-control form-control-lg" 
+                               id="title" 
+                               name="title" 
+                               placeholder="Enter meeting title (e.g., Team Standup, Project Review)"
+                               value="My Meeting Room"
+                               maxlength="200"
+                               required>
+                        <div class="form-text">Give your meeting a descriptive name that participants will see</div>
+                        <div class="invalid-feedback">Please provide a meeting title.</div>
+                    </div>
+
+                    <!-- Max Participants -->
+                    <div class="mb-4">
+                        <label for="max_participants" class="form-label fw-semibold">Maximum Participants</label>
+                        <div class="d-flex align-items-center">
+                            <input type="range" 
+                                   class="form-range participants-slider flex-grow-1 me-3" 
+                                   id="max_participants" 
+                                   name="max_participants"
+                                   min="2" 
+                                   max="100" 
+                                   value="25"
+                                   step="1">
+                            <span class="participants-value" id="participants-display">25</span>
+                        </div>
+                        <div class="form-text">Set the maximum number of people who can join this meeting</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Meeting Features -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="mb-0">
+                        <i class="fas fa-star me-2"></i>Meeting Features
+                    </h5>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Screen Sharing -->
+                    <div class="feature-toggle" id="screen-sharing-toggle">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="feature-icon me-3">
+                                    <i class="fas fa-desktop"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Screen Sharing</h6>
+                                    <p class="mb-0 text-muted small">Allow participants to share their screen</p>
+                                </div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" name="allow_screen_sharing" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Live Chat -->
+                    <div class="feature-toggle" id="chat-toggle">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="feature-icon me-3">
+                                    <i class="fas fa-comments"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Live Chat</h6>
+                                    <p class="mb-0 text-muted small">Enable real-time messaging during the meeting</p>
+                                </div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" name="allow_chat" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Host Approval -->
+                    <div class="feature-toggle" id="approval-toggle">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="feature-icon me-3">
+                                    <i class="fas fa-user-check"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Host Approval Required</h6>
+                                    <p class="mb-0 text-muted small">Participants must wait for host approval to join</p>
+                                </div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" name="require_host_approval">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Notice -->
+            <div class="alert alert-info border-0" role="alert">
+                <div class="d-flex">
+                    <div class="me-3">
+                        <i class="fas fa-shield-alt fa-lg"></i>
+                    </div>
+                    <div>
+                        <h6 class="alert-heading">Security & Privacy</h6>
+                        <p class="mb-0">Your meeting will be secured with end-to-end encryption. Only participants with the meeting link can join.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex gap-3 justify-content-end">
+                <a href="{% url 'videoroom:dashboard' %}" class="btn btn-outline-secondary btn-lg px-4">
+                    <i class="fas fa-arrow-left me-2"></i>Cancel
+                </a>
+                <button type="submit" class="btn create-btn btn-lg px-5">
+                    <i class="fas fa-video me-2"></i>Create Meeting Room
+                </button>
+            </div>
+        </form>
+
+        <!-- Quick Tips -->
+        <div class="mt-5">
+            <h6 class="text-muted mb-3">💡 Quick Tips</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="d-flex mb-2">
+                        <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                        <small class="text-muted">Use descriptive meeting titles for better organization</small>
+                    </div>
+                    <div class="d-flex mb-2">
+                        <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                        <small class="text-muted">Screen sharing helps with presentations and demos</small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex mb-2">
+                        <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                        <small class="text-muted">Host approval adds an extra layer of security</small>
+                    </div>
+                    <div class="d-flex mb-2">
+                        <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                        <small class="text-muted">Chat feature keeps conversations organized</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Participants slider
+    const slider = document.getElementById('max_participants');
+    const display = document.getElementById('participants-display');
+    
+    slider.addEventListener('input', function() {
+        display.textContent = this.value;
+    });
+    
+    // Feature toggles
+    const toggles = document.querySelectorAll('.feature-toggle');
+    toggles.forEach(toggle => {
+        const checkbox = toggle.querySelector('input[type="checkbox"]');
+        
+        // Set initial state
+        if (checkbox.checked) {
+            toggle.classList.add('active');
+        }
+        
+        // Handle clicks on the toggle area
+        toggle.addEventListener('click', function(e) {
+            if (e.target.type !== 'checkbox' && !e.target.closest('.toggle-switch')) {
+                checkbox.checked = !checkbox.checked;
+                checkbox.dispatchEvent(new Event('change'));
+            }
+        });
+        
+        // Handle checkbox changes
+        checkbox.addEventListener('change', function() {
+            if (this.checked) {
+                toggle.classList.add('active');
+            } else {
+                toggle.classList.remove('active');
+            }
+        });
+    });
+    
+    // Form validation
+    const form = document.querySelector('.needs-validation');
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    });
+    
+    // Title character counter
+    const titleInput = document.getElementById('title');
+    const maxLength = titleInput.getAttribute('maxlength');
+    
+    if (titleInput && maxLength) {
+        const counter = document.createElement('div');
+        counter.className = 'form-text text-end mt-1';
+        counter.id = 'title-counter';
+        titleInput.parentNode.appendChild(counter);
+        
+        function updateCounter() {
+            const remaining = maxLength - titleInput.value.length;
+            counter.textContent = `${remaining} characters remaining`;
+            counter.className = `form-text text-end mt-1 ${remaining < 20 ? 'text-warning' : ''}`;
+        }
+        
+        titleInput.addEventListener('input', updateCounter);
+        updateCounter(); // Initial count
+    }
+});
+
+// Auto-focus on title input
+window.addEventListener('load', function() {
+    document.getElementById('title').focus();
+});
+</script>
+{% endblock %}

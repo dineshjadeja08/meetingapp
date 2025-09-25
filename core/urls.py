@@ -16,16 +16,35 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include, re_path
+from django.shortcuts import redirect, render
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
+
+def home_redirect(request):
+    """Redirect to video room home"""
+    if request.user.is_authenticated:
+        return redirect('videoroom:dashboard')
+    else:
+        return redirect('videoroom:home')
+
+
+def login_page(request):
+    """Login page"""
+    return render(request, 'accounts/login.html')
+
+
+def register_page(request):
+    """Register page"""
+    return render(request, 'accounts/register.html')
+
 # Swagger configuration
 schema_view = get_schema_view(
    openapi.Info(
-      title="Meeting App API",
+      title="Video Meeting App API",
       default_version='v1',
-      description="A comprehensive API for managing meetings and user authentication",
+      description="A comprehensive API for video conferencing, meeting rooms and user authentication",
       terms_of_service="https://www.google.com/policies/terms/",
       contact=openapi.Contact(email="contact@meetingapp.local"),
       license=openapi.License(name="BSD License"),
@@ -35,9 +54,15 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    path('', home_redirect, name='home'),
+    path('login/', login_page, name='login_page'),
+    path('register/', register_page, name='register_page'),
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),  # This matches the original path
     path('api/accounts/', include('accounts.urls', namespace='api-accounts')),  # Alternative API path with namespace
+    
+    # Video Rooms - Google Meet style
+    path('video/', include('videoroom.urls')),
     
     # Swagger documentation
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),

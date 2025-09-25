@@ -49,7 +49,7 @@ INSTALLED_APPS = [
 
     #internal apps
     'accounts',
-    'meetings',
+    'videoroom',
 
 
 ]
@@ -223,5 +223,8 @@ SWAGGER_SETTINGS = {
         }
     }
 }
+
+# Login URL for login_required decorator
+LOGIN_URL = '/api/accounts/login/'
 
 

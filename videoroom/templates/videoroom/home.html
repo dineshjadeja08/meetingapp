@@ -1,0 +1,344 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Meet - Video Conferencing{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 100px 0;
+        min-height: 70vh;
+        display: flex;
+        align-items: center;
+    }
+    
+    .action-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin: 1rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+    }
+    
+    .action-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+    
+    .action-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #667eea;
+    }
+    
+    .features-section {
+        padding: 80px 0;
+        background-color: #f8f9fa;
+    }
+    
+    .feature-item {
+        text-align: center;
+        padding: 2rem;
+    }
+    
+    .feature-icon {
+        font-size: 2.5rem;
+        color: #667eea;
+        margin-bottom: 1rem;
+    }
+    
+    .room-code-input {
+        font-size: 1.2rem;
+        padding: 12px 16px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+    
+    .room-code-input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .btn-primary-custom {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        padding: 12px 30px;
+        font-size: 1.1rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">
+                    <i class="fas fa-video me-3"></i>
+                    Premium Video Meetings
+                </h1>
+                <p class="lead mb-4">
+                    Connect with anyone, anywhere. Create instant meeting rooms, 
+                    share your screen, and collaborate in real-time with crystal-clear video and audio.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'videoroom:create_room' %}" class="btn btn-light btn-lg px-4">
+                            <i class="fas fa-plus-circle me-2"></i>New Meeting
+                        </a>
+                        <a href="{% url 'videoroom:dashboard' %}" class="btn btn-outline-light btn-lg px-4">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                    {% else %}
+                        <a href="{% url 'login_page' %}" class="btn btn-light btn-lg px-4">
+                            <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                        </a>
+                        <a href="{% url 'register_page' %}" class="btn btn-outline-light btn-lg px-4">
+                            <i class="fas fa-user-plus me-2"></i>Sign Up
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="text-center">
+                    <i class="fas fa-users fa-10x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Quick Actions -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="action-card text-center h-100">
+                    <div class="action-icon">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <h3 class="h4 mb-3">Start an Instant Meeting</h3>
+                    <p class="text-muted mb-4">
+                        Create a new meeting room instantly and invite participants with a simple link.
+                    </p>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'videoroom:create_room' %}" class="btn btn-primary-custom btn-lg">
+                            <i class="fas fa-plus-circle me-2"></i>Create Meeting
+                        </a>
+                    {% else %}
+                        <a href="{% url 'login_page' %}" class="btn btn-primary-custom btn-lg">
+                            <i class="fas fa-sign-in-alt me-2"></i>Sign In to Create
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="action-card text-center h-100">
+                    <div class="action-icon">
+                        <i class="fas fa-door-open"></i>
+                    </div>
+                    <h3 class="h4 mb-3">Join a Meeting</h3>
+                    <p class="text-muted mb-4">
+                        Have a meeting code? Enter it below to join an existing meeting room.
+                    </p>
+                    
+                    <form method="post" action="{% url 'videoroom:join_room_page' %}" class="d-inline-block w-100">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <input type="text" 
+                                   name="room_code" 
+                                   class="form-control room-code-input" 
+                                   placeholder="XXX-XXX-XXXX"
+                                   pattern="[A-Za-z0-9]{3}-[A-Za-z0-9]{3}-[A-Za-z0-9]{4}"
+                                   maxlength="12"
+                                   required>
+                        </div>
+                        
+                        {% if not user.is_authenticated %}
+                        <div class="mb-3">
+                            <input type="text" 
+                                   name="guest_name" 
+                                   class="form-control" 
+                                   placeholder="Your name (optional for guests)"
+                                   maxlength="100">
+                        </div>
+                        {% endif %}
+                        
+                        <button type="submit" class="btn btn-primary-custom btn-lg">
+                            <i class="fas fa-sign-in-alt me-2"></i>Join Meeting
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold">Powerful Features</h2>
+            <p class="lead text-muted">Everything you need for productive video meetings</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-hd-video"></i>
+                    </div>
+                    <h4>HD Video & Audio</h4>
+                    <p class="text-muted">Crystal clear video quality up to 1080p with noise cancellation.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-desktop"></i>
+                    </div>
+                    <h4>Screen Sharing</h4>
+                    <p class="text-muted">Share your entire screen or specific applications with participants.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h4>Live Chat</h4>
+                    <p class="text-muted">Real-time messaging during meetings with emoji support.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h4>100+ Participants</h4>
+                    <p class="text-muted">Host large meetings with up to 100 participants simultaneously.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h4>Secure & Private</h4>
+                    <p class="text-muted">End-to-end encryption and secure meeting rooms with access controls.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h4>Cross Platform</h4>
+                    <p class="text-muted">Works seamlessly on desktop, tablet, and mobile devices.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Activity (for authenticated users) -->
+{% if user.is_authenticated %}
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3>Quick Access</h3>
+                    <a href="{% url 'videoroom:dashboard' %}" class="btn btn-outline-primary">
+                        View All <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-plus-circle fa-3x text-primary mb-3"></i>
+                                <h5>Start New Meeting</h5>
+                                <p class="text-muted small">Create an instant meeting room</p>
+                                <a href="{% url 'videoroom:create_room' %}" class="btn btn-primary">Create Now</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-clock fa-3x text-success mb-3"></i>
+                                <h5>Recent Meetings</h5>
+                                <p class="text-muted small">View your meeting history</p>
+                                <a href="{% url 'videoroom:dashboard' %}" class="btn btn-success">View History</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-cog fa-3x text-warning mb-3"></i>
+                                <h5>Settings</h5>
+                                <p class="text-muted small">Manage your preferences</p>
+                                <a href="{% url 'videoroom:dashboard' %}" class="btn btn-warning">Settings</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-format room code input
+document.addEventListener('DOMContentLoaded', function() {
+    const roomCodeInput = document.querySelector('.room-code-input');
+    if (roomCodeInput) {
+        roomCodeInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+            
+            if (value.length > 10) {
+                value = value.substr(0, 10);
+            }
+            
+            // Format as XXX-XXX-XXXX
+            if (value.length > 6) {
+                value = value.substr(0, 3) + '-' + value.substr(3, 3) + '-' + value.substr(6);
+            } else if (value.length > 3) {
+                value = value.substr(0, 3) + '-' + value.substr(3);
+            }
+            
+            e.target.value = value;
+        });
+    }
+});
+</script>
+{% endblock %}
