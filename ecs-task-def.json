@@ -1,0 +1,39 @@
+{
+  "family": "meetingapp-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "512",
+  "memory": "1024",
+  "containerDefinitions": [
+    {
+      "name": "meetingapp-web",
+      "image": "<account>.dkr.ecr.<region>.amazonaws.com/meetingapp-web:latest",
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        { "name": "DJANGO_SECRET_KEY", "value": "<your-secret>" },
+        { "name": "DEBUG", "value": "False" },
+        { "name": "DATABASE_HOST", "value": "<rds-endpoint>" },
+        { "name": "DATABASE_NAME", "value": "meetingapp" },
+        { "name": "DATABASE_USER", "value": "admin" },
+        { "name": "DATABASE_PASSWORD", "value": "<your-db-password>" },
+        { "name": "DJANGO_ALLOWED_HOSTS", "value": "yourdomain.com" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/meetingapp",
+          "awslogs-region": "<region>",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

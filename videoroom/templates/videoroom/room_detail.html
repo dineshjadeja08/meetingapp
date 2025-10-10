@@ -632,7 +632,7 @@ class MeetingRoom {
     
     async joinRoom() {
         try {
-            const response = await fetch('/api/join/', {
+            const response = await fetch('/video/api/join/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -657,7 +657,7 @@ class MeetingRoom {
     
     async loadParticipants() {
         try {
-            const response = await fetch(`/api/rooms/${this.roomData.room_code}/participants/`);
+            const response = await fetch(`/video/api/rooms/${this.roomData.room_code}/participants/`);
             const participants = await response.json();
             
             this.updateParticipantsList(participants);
@@ -705,7 +705,7 @@ class MeetingRoom {
     
     async loadChatMessages() {
         try {
-            const response = await fetch(`/api/rooms/${this.roomData.room_code}/chat/`);
+            const response = await fetch(`/video/api/rooms/${this.roomData.room_code}/chat/`);
             const messages = await response.json();
             
             this.updateChatMessages(messages);
@@ -744,7 +744,7 @@ class MeetingRoom {
         if (!message) return;
         
         try {
-            const response = await fetch(`/api/rooms/${this.roomData.room_code}/chat/`, {
+            const response = await fetch(`/video/api/rooms/${this.roomData.room_code}/chat/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -906,7 +906,7 @@ class MeetingRoom {
     
     async updateParticipantStatus() {
         try {
-            await fetch(`/api/rooms/${this.roomData.room_code}/status/`, {
+            await fetch(`/video/api/rooms/${this.roomData.room_code}/status/`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1039,7 +1039,7 @@ class MeetingRoom {
             
             // Leave room via API
             try {
-                await fetch(`/api/rooms/${this.roomData.room_code}/leave/`, {
+                await fetch(`/video/api/rooms/${this.roomData.room_code}/leave/`, {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': this.getCookie('csrftoken')
@@ -1050,21 +1050,21 @@ class MeetingRoom {
             }
             
             // Redirect
-            window.location.href = '/dashboard/';
+            window.location.href = '/video/dashboard/';
         }
     }
     
     async endMeeting() {
         if (confirm('Are you sure you want to end the meeting for everyone?')) {
             try {
-                await fetch(`/api/rooms/${this.roomData.room_code}/end/`, {
+                await fetch(`/video/api/rooms/${this.roomData.room_code}/end/`, {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': this.getCookie('csrftoken')
                     }
                 });
                 
-                window.location.href = '/dashboard/';
+                window.location.href = '/video/dashboard/';
             } catch (error) {
                 console.error('Error ending meeting:', error);
             }

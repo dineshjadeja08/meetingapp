@@ -306,7 +306,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Check if room exists via API
-        fetch(`/api/rooms/${cleanCode}/info/`)
+        fetch(`/video/api/rooms/${cleanCode}/info/`)
             .then(response => response.json())
             .then(data => {
                 if (data.room_code) {
@@ -403,7 +403,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 {% if user.is_authenticated %}
 function loadRecentMeetings() {
-    fetch('/api/rooms/')
+    fetch('/video/api/rooms/')
         .then(response => response.json())
         .then(data => {
             const container = document.getElementById('recent-rooms-list');

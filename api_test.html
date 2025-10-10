@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test Interface</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Meeting App - API Test Interface</h1>
+        
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <h3>Authentication Test</h3>
+                <div id="auth-status" class="alert alert-info">Not authenticated</div>
+                
+                <h4>Register New User</h4>
+                <form id="register-form">
+                    <div class="mb-3">
+                        <label class="form-label">Username:</label>
+                        <input type="text" class="form-control" id="reg-username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email:</label>
+                        <input type="email" class="form-control" id="reg-email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password:</label>
+                        <input type="password" class="form-control" id="reg-password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Confirm Password:</label>
+                        <input type="password" class="form-control" id="reg-password2" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Register</button>
+                </form>
+                
+                <h4 class="mt-4">Login</h4>
+                <form id="login-form">
+                    <div class="mb-3">
+                        <label class="form-label">Username:</label>
+                        <input type="text" class="form-control" id="login-username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password:</label>
+                        <input type="password" class="form-control" id="login-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Login</button>
+                </form>
+            </div>
+            
+            <div class="col-md-6">
+                <h3>Room Management Test</h3>
+                <div id="room-status" class="alert alert-warning">Login required</div>
+                
+                <h4>Create Room</h4>
+                <form id="create-room-form">
+                    <div class="mb-3">
+                        <label class="form-label">Room Title:</label>
+                        <input type="text" class="form-control" id="room-title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Max Participants:</label>
+                        <input type="number" class="form-control" id="max-participants" value="10" min="2" max="100">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Room</button>
+                </form>
+                
+                <h4 class="mt-4">Join Room</h4>
+                <form id="join-room-form">
+                    <div class="mb-3">
+                        <label class="form-label">Room Code:</label>
+                        <input type="text" class="form-control" id="room-code" placeholder="xxx-xxx-xxx" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Join Room</button>
+                </form>
+                
+                <h4 class="mt-4">Current Rooms</h4>
+                <button id="refresh-rooms" class="btn btn-info">Refresh Rooms</button>
+                <div id="rooms-list" class="mt-2"></div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <h3>Test Results</h3>
+                <div id="test-results" class="alert alert-light" style="height: 300px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let accessToken = null;
+        let currentUser = null;
+        
+        function log(message) {
+            const resultsDiv = document.getElementById('test-results');
+            const timestamp = new Date().toLocaleTimeString();
+            resultsDiv.innerHTML += `[${timestamp}] ${message}<br>`;
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+        
+        function updateAuthStatus() {
+            const statusDiv = document.getElementById('auth-status');
+            if (accessToken) {
+                statusDiv.className = 'alert alert-success';
+                statusDiv.textContent = `Authenticated as ${currentUser}`;
+                document.getElementById('room-status').className = 'alert alert-success';
+                document.getElementById('room-status').textContent = 'Ready to manage rooms';
+            } else {
+                statusDiv.className = 'alert alert-info';
+                statusDiv.textContent = 'Not authenticated';
+                document.getElementById('room-status').className = 'alert alert-warning';
+                document.getElementById('room-status').textContent = 'Login required';
+            }
+        }
+        
+        function getAuthHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': accessToken ? `Bearer ${accessToken}` : ''
+            };
+        }
+        
+        // Generate random test data
+        function generateTestUser() {
+            const timestamp = Date.now();
+            return {
+                username: `testuser_${timestamp}`,
+                email: `test_${timestamp}@example.com`,
+                password: 'TestPassword123!',
+                password2: 'TestPassword123!'
+            };
+        }
+        
+        // Register form handler
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const userData = {
+                username: document.getElementById('reg-username').value,
+                email: document.getElementById('reg-email').value,
+                password: document.getElementById('reg-password').value,
+                password2: document.getElementById('reg-password2').value
+            };
+            
+            try {
+                log(`Attempting registration for user: ${userData.username}`);
+                const response = await fetch('/api/accounts/register/', {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(userData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ Registration successful: ${response.status}`);
+                    // Auto-fill login form
+                    document.getElementById('login-username').value = userData.username;
+                    document.getElementById('login-password').value = userData.password;
+                } else {
+                    log(`❌ Registration failed: ${response.status} - ${JSON.stringify(result)}`);
+                }
+            } catch (error) {
+                log(`❌ Registration error: ${error.message}`);
+            }
+        });
+        
+        // Login form handler
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const loginData = {
+                username: document.getElementById('login-username').value,
+                password: document.getElementById('login-password').value
+            };
+            
+            try {
+                log(`Attempting login for user: ${loginData.username}`);
+                const response = await fetch('/api/accounts/login/', {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(loginData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    accessToken = result.access;
+                    currentUser = loginData.username;
+                    updateAuthStatus();
+                    log(`✅ Login successful: ${response.status}`);
+                    log(`Token received: ${accessToken.substring(0, 50)}...`);
+                } else {
+                    log(`❌ Login failed: ${response.status} - ${JSON.stringify(result)}`);
+                }
+            } catch (error) {
+                log(`❌ Login error: ${error.message}`);
+            }
+        });
+        
+        // Create room form handler
+        document.getElementById('create-room-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!accessToken) {
+                log('❌ Please login first');
+                return;
+            }
+            
+            const roomData = {
+                title: document.getElementById('room-title').value,
+                max_participants: parseInt(document.getElementById('max-participants').value),
+                allow_chat: true,
+                allow_screen_sharing: true
+            };
+            
+            try {
+                log(`Creating room: ${roomData.title}`);
+                const response = await fetch('/video/api/rooms/', {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(roomData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ Room created: ${result.room_code}`);
+                    log(`Room ID: ${result.id}`);
+                    document.getElementById('room-code').value = result.room_code;
+                    refreshRooms();
+                } else {
+                    log(`❌ Room creation failed: ${response.status} - ${JSON.stringify(result)}`);
+                }
+            } catch (error) {
+                log(`❌ Room creation error: ${error.message}`);
+            }
+        });
+        
+        // Join room form handler
+        document.getElementById('join-room-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!accessToken) {
+                log('❌ Please login first');
+                return;
+            }
+            
+            const roomCode = document.getElementById('room-code').value;
+            
+            try {
+                log(`Joining room: ${roomCode}`);
+                const response = await fetch('/video/api/join/', {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ room_code: roomCode })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ Successfully joined room: ${roomCode}`);
+                    log(`Join result: ${JSON.stringify(result)}`);
+                } else {
+                    log(`❌ Failed to join room: ${response.status} - ${JSON.stringify(result)}`);
+                }
+            } catch (error) {
+                log(`❌ Join room error: ${error.message}`);
+            }
+        });
+        
+        // Refresh rooms
+        async function refreshRooms() {
+            if (!accessToken) return;
+            
+            try {
+                log('Fetching rooms list...');
+                const response = await fetch('/video/api/rooms/', {
+                    headers: getAuthHeaders()
+                });
+                
+                const rooms = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ Found ${rooms.length} rooms`);
+                    const roomsList = document.getElementById('rooms-list');
+                    roomsList.innerHTML = rooms.map(room => 
+                        `<div class="card mb-2">
+                            <div class="card-body">
+                                <h6>${room.title}</h6>
+                                <p><strong>Code:</strong> ${room.room_code}</p>
+                                <p><strong>Status:</strong> ${room.is_active ? 'Active' : 'Inactive'}</p>
+                            </div>
+                        </div>`
+                    ).join('');
+                } else {
+                    log(`❌ Failed to fetch rooms: ${response.status}`);
+                }
+            } catch (error) {
+                log(`❌ Fetch rooms error: ${error.message}`);
+            }
+        }
+        
+        // Auto-fill with test data
+        document.addEventListener('DOMContentLoaded', () => {
+            const testUser = generateTestUser();
+            document.getElementById('reg-username').value = testUser.username;
+            document.getElementById('reg-email').value = testUser.email;
+            document.getElementById('reg-password').value = testUser.password;
+            document.getElementById('reg-password2').value = testUser.password2;
+            document.getElementById('room-title').value = `Test Room ${new Date().toLocaleTimeString()}`;
+            
+            log('🚀 API Test Interface loaded');
+            log('Pre-filled with test data - click Register to create a test user');
+        });
+        
+        document.getElementById('refresh-rooms').addEventListener('click', refreshRooms);
+        updateAuthStatus();
+    </script>
+</body>
+</html>

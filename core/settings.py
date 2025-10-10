@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -19,13 +20,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-np_we$y*p&mt8f-umqu4lpy$t&s)u%vxm90)tdengygsl@50%('
+# SECURITY - read secret and debug from environment for deployments
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY', 'django-insecure-np_we$y*p&mt8f-umqu4lpy$t&s)u%vxm90)tdengygsl@50%('
+)
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG should be off in production; allow '1', 'true', 'yes' (case-insensitive)
+DEBUG = str(os.environ.get('DEBUG', 'False')).lower() in ('1', 'true', 'yes')
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS can be provided as a comma or space separated env var
+raw_allowed = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost 127.0.0.1')
+if ',' in raw_allowed:
+    ALLOWED_HOSTS = [h.strip() for h in raw_allowed.split(',') if h.strip()]
+else:
+    ALLOWED_HOSTS = [h.strip() for h in raw_allowed.split() if h.strip()]
 
 
 # Application definition
@@ -37,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
 
 
     #third party
@@ -45,6 +54,10 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'drf_yasg',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 
 
     #internal apps
@@ -61,10 +74,9 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -92,14 +104,21 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'meetingapp',  # The name of your MySQL database
-        'USER': 'root',      # Your MySQL username
-        'PASSWORD': 'root',  # Your MySQL password
-        'HOST': 'localhost',           # Or the IP address of your MySQL server
-        'PORT': '3306',                # The port MySQL is running on
+        'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.mysql'),
+        'NAME': os.environ.get('DATABASE_NAME', 'meetingapp'),
+        'USER': os.environ.get('DATABASE_USER', 'root'),
+        'PASSWORD': os.environ.get('DATABASE_PASSWORD', 'root'),
+        'HOST': os.environ.get('DATABASE_HOST', 'localhost'),
+        'PORT': os.environ.get('DATABASE_PORT', '3306'),
     }
 }
+
+# Support DATABASE_URL (e.g., provided by Render or Heroku). If present, it overrides the above.
+import dj_database_url
+
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
+    DATABASES['default'] = dj_database_url.parse(DATABASE_URL, conn_max_age=600)
 
 
 # Password validation
@@ -137,6 +156,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+# Where collectstatic will gather files (useful for Docker/production)
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -227,4 +248,44 @@ SWAGGER_SETTINGS = {
 # Login URL for login_required decorator
 LOGIN_URL = '/api/accounts/login/'
 
+# Site ID for django-allauth
+SITE_ID = 1
 
+# Allauth Configuration
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+# Allauth Settings
+ACCOUNT_EMAIL_VERIFICATION = 'optional'
+ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+LOGIN_REDIRECT_URL = '/oauth/success/'
+LOGOUT_REDIRECT_URL = '/'
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
+# Social Account Settings
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+        'OAUTH_PKCE_ENABLED': True,
+        'FETCH_USERINFO': True,
+    }
+}
+
+# Additional Social Account Settings
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_ADAPTER = 'accounts.adapters.CustomSocialAccountAdapter'
+
+# Callback handling
+ACCOUNT_ADAPTER = 'accounts.adapters.CustomAccountAdapter'
+
+# Custom OAuth callback handling
+SOCIALACCOUNT_STORE_TOKENS = True

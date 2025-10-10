@@ -39,6 +39,11 @@ def register_page(request):
     """Register page"""
     return render(request, 'accounts/register.html')
 
+
+def oauth_success_page(request):
+    """OAuth success page"""
+    return render(request, 'accounts/oauth_success.html')
+
 # Swagger configuration
 schema_view = get_schema_view(
    openapi.Info(
@@ -57,9 +62,13 @@ urlpatterns = [
     path('', home_redirect, name='home'),
     path('login/', login_page, name='login_page'),
     path('register/', register_page, name='register_page'),
+    path('oauth/success/', oauth_success_page, name='oauth_success'),
     path('admin/', admin.site.urls),
-    path('accounts/', include('accounts.urls')),  # This matches the original path
-    path('api/accounts/', include('accounts.urls', namespace='api-accounts')),  # Alternative API path with namespace
+    
+    # Django-allauth URLs (must be at root level)
+    path('accounts/', include('allauth.urls')),
+    
+    path('api/accounts/', include('accounts.urls')),  # API path for accounts
     
     # Video Rooms - Google Meet style
     path('video/', include('videoroom.urls')),

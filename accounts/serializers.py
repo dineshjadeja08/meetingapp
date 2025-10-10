@@ -4,6 +4,7 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+from allauth.socialaccount.models import SocialAccount
 
 User = get_user_model()
 
@@ -253,3 +254,39 @@ class UserProfileSerializer(serializers.ModelSerializer):
             profile.save()
         
         return instance
+
+
+class SocialAccountSerializer(serializers.ModelSerializer):
+    """
+    Serializer for social account information
+    """
+    provider_name = serializers.SerializerMethodField()
+    account_email = serializers.SerializerMethodField()
+    account_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SocialAccount
+        fields = ('provider', 'provider_name', 'account_email', 'account_name', 'date_joined')
+        read_only_fields = ('provider', 'date_joined')
+
+    def get_provider_name(self, obj):
+        """Get human-readable provider name"""
+        return obj.get_provider_display()
+
+    def get_account_email(self, obj):
+        """Get email from extra data"""
+        return obj.extra_data.get('email', '')
+
+    def get_account_name(self, obj):
+        """Get name from extra data"""
+        return obj.extra_data.get('name', '')
+
+
+class GoogleOAuthResponseSerializer(serializers.Serializer):
+    """
+    Serializer for Google OAuth response
+    """
+    access = serializers.CharField(read_only=True)
+    refresh = serializers.CharField(read_only=True)
+    user = UserProfileSerializer(read_only=True)
+    message = serializers.CharField(read_only=True)
